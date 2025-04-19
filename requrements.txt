@@ -1,0 +1,4 @@
+matplotlib
+tqdm
+dash
+plotly
