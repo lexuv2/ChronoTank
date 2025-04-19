@@ -70,4 +70,5 @@ Adapters allow you to customize how data is processed. To create an adapter:
             return end_time = time.time() ## return time it took to run the process     
      ```
 
-
+## TODO
+ - SO_TIMESTAMPING to measure network latency
