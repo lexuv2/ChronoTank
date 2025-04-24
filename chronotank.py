@@ -28,12 +28,31 @@ class RunResult:
             long_description (str, optional): Detailed description for hover info. Defaults to "".
         """
         self.runs = sorted(runs)
-        self.avg  = sum(runs) / len(runs)
-        self.max  = max(runs)
-        self.min  = min(runs)
+        if len(runs) == 0:
+            self.avg = 0
+            self.max = 0
+            self.min = 0
+        else:
+            self.avg  = sum(runs) / len(runs)
+            self.max  = max(runs)
+            self.min  = min(runs)
         self.input = input
         self.description = description
         self.long_description = long_description
+    
+    def add_runs(self, runs):
+        """Add additional runs to the existing list and recalculate statistics.
+        
+        Args:
+            runs (list): List of additional execution times
+        """
+        self.runs.extend(runs)
+        self.runs.sort()
+        self.avg = sum(self.runs) / len(self.runs)
+        self.max = max(self.runs)
+        self.min = min(self.runs)
+    
+
         
     def STD(self):
         """Calculate the standard deviation of the runs.
@@ -63,6 +82,8 @@ class RunResult:
         return self.runs[index]
 
     def remove_outliers(self, threshold=1.5):
+        if len(self.runs) == 0:
+            return self
         """Remove outliers from the runs using the IQR method.
         
         Args:
@@ -77,7 +98,10 @@ class RunResult:
         lower_bound = q1 - threshold * iqr
         upper_bound = q3 + threshold * iqr
         filtered_runs = [x for x in self.runs if lower_bound <= x <= upper_bound]
-        return RunResult(filtered_runs, self.input)
+        ret = RunResult(filtered_runs, self.input)
+        ret.description = self.description
+        ret.long_description = self.long_description
+        return ret
 
     def __str__(self):
         """String representation of the RunResult.
@@ -153,7 +177,7 @@ class ChronoTank:
         result = self.adapter.run(input.encode())
         return result
     
-    def find_len(self, max_flag_len=100):
+    def find_len(self, max_flag_len=100,start_len=1):
         """Find the optimal length by timing responses to inputs of increasing length.
         
         Args:
@@ -164,10 +188,11 @@ class ChronoTank:
         """
         flag = ""
         times = {} 
-        for i in range(1, max_flag_len):
+        for i in range(start_len, max_flag_len):
             flag += "A"
             result = self.run_once_batch(flag)
             result.description = f"{i}"
+            result.long_description = f"len: {i}"
             avg_time = result.avg
             times[i] = avg_time
             yield result
