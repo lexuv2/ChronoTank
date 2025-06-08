@@ -44,7 +44,7 @@ class LiveUpdatePlot:
             import logging
             logging.getLogger('werkzeug').setLevel(logging.ERROR)  # Suppress Werkzeug debug info
             webbrowser.open("http://127.0.0.1:8050")  # Open the browser automatically
-            self.app.run(debug=False, host="127.0.0.1", port=8050)  # Disable Dash debug info
+            self.app.run(debug=False, host="0.0.0.0", port=8050)  # Disable Dash debug info
 
         self.server_thread = threading.Thread(target=run_server, daemon=True)
         self.server_thread.start()

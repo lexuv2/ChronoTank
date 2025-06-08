@@ -4,7 +4,8 @@ import matplotlib.pyplot as plt
 import matplotlib
 import matplotlib.animation as animation
 import multiprocessing
-
+import time
+import sys
 class RunResult:
     """ Result of one batch run of the adapter.
     
@@ -36,9 +37,14 @@ class RunResult:
             self.avg  = sum(runs) / len(runs)
             self.max  = max(runs)
             self.min  = min(runs)
+        
         self.input = input
         self.description = description
         self.long_description = long_description
+
+
+
+
     
     def add_runs(self, runs):
         """Add additional runs to the existing list and recalculate statistics.
@@ -51,6 +57,7 @@ class RunResult:
         self.avg = sum(self.runs) / len(self.runs)
         self.max = max(self.runs)
         self.min = min(self.runs)
+
     
 
         
@@ -130,7 +137,8 @@ class ChronoTank:
                  batch_size=8,
                 threads=1,
                 verbose=False,
-                alphabet="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+{}|:<>?"
+                alphabet="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+{}|:<>?",
+                    save_file_name=""
                 ):
         """Initialize the ChronoTank instance.
         
@@ -141,14 +149,36 @@ class ChronoTank:
             verbose (bool, optional): Whether to print detailed output. Defaults to False.
             alphabet (str, optional): Character set for testing. Defaults to alphanumeric and special chars.
         """
+        self.save_file_name = save_file_name
+        if save_file_name == "":
+            self.save_file_name = f"run{time.strftime('%Y%m%d_%H%M%S')}.csv"
+        else:
+            self.save_file_name = save_file_name+".csv"
+        ## clear file and then open as append
+        self.last_run_time = time.time_ns()
+        self.save_file = open(self.save_file_name, "w")
+        self.save_file.write("")
+        self.save_file.close()
+        self.save_file = open(self.save_file_name, "a")
+        # input of the run, time taken, and time taken after the previous run
+        self.save_file.write(f"input,time_taken,time_delta\n")
         self.adapter = adapter
         self.batch_size = batch_size
         self.threads = threads
         self.verbose = verbose
         self.alphabet = alphabet
+        self.last_avg_update_time = time.time()
+        self.tested_num = 0
+        self.last_avg_update_num = 0
+        self.tests_per_minute = 0.0
+        self.start_time = time.time()
+        
 
-
-    def run_once_batch(self, input):
+    def __del__(self):
+        """Close the save file when the object is deleted."""
+        if self.save_file:
+            self.save_file.close()
+    def run_once_batch(self, input,single_thread=False):
         """Run the adapter multiple times on the same input and collect timing statistics.
         
         Args:
@@ -157,11 +187,20 @@ class ChronoTank:
         Returns:
             RunResult: Result object containing timing statistics
         """
-        inputs = [input] * self.batch_size
-        with multiprocessing.Pool(processes=self.threads) as pool:
-            results = pool.map(self.run_one, inputs)
-        
-        result = RunResult(results, input)
+        if single_thread:
+            results = []
+            for _ in range(self.batch_size):
+                result = self.run_one(input)
+                results.append(result)
+            
+            result = RunResult(results, input)
+            
+        else:
+            inputs = [input] * self.batch_size
+            with multiprocessing.Pool(processes=self.threads) as pool:
+                results = pool.map(self.run_one, inputs)
+
+            result = RunResult(results, input)
         return result
 
 
@@ -174,9 +213,25 @@ class ChronoTank:
         Returns:
             float: Execution time for this run
         """
+        self.tested_num += 1
         result = self.adapter.run(input.encode())
+        # save the result to the file
+        delta = time.time_ns() - self.last_run_time
+        self.save_file.write(f"{input.replace('\n','').replace('\r','')},{result},{delta}\n")
+        self.last_run_time = time.time_ns()
+
+        # if self.last_print_time + 1 < time.time():
+            # self.last_print_time = time.time()
+
+        self.tests_per_minute = (self.tested_num) / ((time.time() - self.start_time) / 60)
+                # print((time.time() - self.last_avg_update_time) / 60)
+            
+
+
+        print(f"\r Testing: {input}, Time: {result}, Tested num: {self.tested_num}, TPM: {self.tests_per_minute:.2f}", end="")
+
         return result
-    
+
     def find_len(self, max_flag_len=100,start_len=1):
         """Find the optimal length by timing responses to inputs of increasing length.
         

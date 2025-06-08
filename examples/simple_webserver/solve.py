@@ -10,15 +10,15 @@ import adapters.dumb_http_GETrequest as adapter
 import visualizers.live_update_plot_plotly as lp_pl
 
 # Initialize the adapter for the binary we're testing
-adapter = adapter.DumbHttpGetRequest("http://192.168.1.119:5000/check_flag","flag")
+adapter = adapter.DumbHttpGetRequest("http://localhost:5000/check_flag","flag")
 
 # Create a ChronoTank instance with performance settings
 # - batch_size: Number of measurements per input configuration
 # - threads: Parallel execution threads for faster analysis
 # - verbose: Whether to print detailed progress information
 ch = chronotank.ChronoTank(adapter, 
-                           batch_size=1,
-                            threads=1, 
+                           batch_size=100,
+                            threads=6, 
                             verbose=False)
 
 # Initialize the live plotting visualization

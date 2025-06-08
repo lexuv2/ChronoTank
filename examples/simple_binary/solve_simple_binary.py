@@ -10,31 +10,31 @@ import adapters.bin_stdin_perf as adapters
 import visualizers.live_update_plot_plotly as lp_pl
 
 # Initialize the adapter for the binary we're testing
-adapter = adapters.BinWithStdinPerf("./examples/simple_binary/sample")
+adapter = adapters.BinWithStdinPerf("./sample")
 
 # Create a ChronoTank instance with performance settings
 # - batch_size: Number of measurements per input configuration
 # - threads: Parallel execution threads for faster analysis
 # - verbose: Whether to print detailed progress information
 ch = chronotank.ChronoTank(adapter, 
-                           batch_size=100,
+                           batch_size=20,
                             threads=8, 
                             verbose=False)
 
 # Initialize the live plotting visualization
-plot = lp_pl.LiveUpdatePlot(title="ChronoTank", x_label="Input Size", y_label="Time (s)")
+plot = lp_pl.LiveUpdatePlot(title="ChronoTank", x_label="Input Size", y_label="Time (cycles)")
 plot.show()
 
 # Phase 1: Determine the password length by testing different input lengths
 # The correct length will likely show a timing anomaly (longer execution time)
-for x in ch.find_len():
-    print("\n\n=============")
-    print(f"{len(x.input)} AVG:{x.avg}  STD:{x.STD()}")
-    # Remove statistical outliers to get cleaner results
-    without_outliers = x.remove_outliers()
-    print("Without outliers")
-    print(f"{len(x.input)} AVG:{without_outliers.avg}  STD:{without_outliers.STD()}")
-    plot.update(without_outliers)
+# for x in ch.find_len():
+#     print("\n\n=============")
+#     print(f"{len(x.input)} AVG:{x.avg}  STD:{x.STD()}")
+#     # Remove statistical outliers to get cleaner results
+#     without_outliers = x.remove_outliers()
+#     print("Without outliers")
+#     print(f"{len(x.input)} AVG:{without_outliers.avg}  STD:{without_outliers.STD()}")
+#     plot.update(without_outliers)
 
 # Based on the timing analysis, we determine the password is 12 characters long
 
