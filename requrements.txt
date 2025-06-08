@@ -2,3 +2,7 @@ matplotlib
 tqdm
 dash
 plotly
+numpy
+plotly
+pandas
+scipy

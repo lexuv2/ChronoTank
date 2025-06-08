@@ -5,6 +5,8 @@ import matplotlib
 import matplotlib.animation as animation
 import multiprocessing
 import time
+
+import numpy as np
 import sys
 class RunResult:
     """ Result of one batch run of the adapter.
@@ -172,6 +174,7 @@ class ChronoTank:
         self.last_avg_update_num = 0
         self.tests_per_minute = 0.0
         self.start_time = time.time()
+        self.combined_run_times = []
         
 
     def __del__(self):
@@ -215,20 +218,24 @@ class ChronoTank:
         """
         self.tested_num += 1
         result = self.adapter.run(input.encode())
+        
         # save the result to the file
         delta = time.time_ns() - self.last_run_time
         self.save_file.write(f"{input.replace('\n','').replace('\r','')},{result},{delta}\n")
         self.last_run_time = time.time_ns()
 
+        # self.combined_run_times.append(result)
+        self.combined_run_times.append(result)
         # if self.last_print_time + 1 < time.time():
             # self.last_print_time = time.time()
 
         self.tests_per_minute = (self.tested_num) / ((time.time() - self.start_time) / 60)
                 # print((time.time() - self.last_avg_update_time) / 60)
             
+        #calculate standard deviation from self.combined_run_times
+        std = np.std(self.combined_run_times)
 
-
-        print(f"\r Testing: {input}, Time: {result}, Tested num: {self.tested_num}, TPM: {self.tests_per_minute:.2f}", end="")
+        print(f"\r Testing: {input}, Time: {result}, Tested num: {self.tested_num}, TPM: {self.tests_per_minute:.2f} STD={std}", end="")
 
         return result
 

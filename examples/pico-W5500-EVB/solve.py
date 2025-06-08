@@ -1,6 +1,6 @@
 import sys
 import os
-
+import time
 # Add the project root to sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 import random
@@ -88,20 +88,17 @@ while True:
         alph_arr = list(full_alphabet)
     ## pad to 9 chars
     padded_flag = char_to_test
-    a=0
     if (random.randint(0, 20) == 0):
-        print("Testing padded flag")
-        padded_flag = "secret123"
-        a=1
-    padded_flag = "admin\n\r"+padded_flag.ljust(9, "A")
-    print(f"aaaa\n\n\n\nTesting padded flag: {padded_flag}")
+        # print("Testing padded flag")
+        padded_flag = "secret12u"
+    padded_flag = "admin\r"+padded_flag.ljust(9, "A")
+    # print(f"aaaa\n\n\n\nTesting padded flag: {padded_flag}")
+    time.sleep(0.1)
     result = ch.run_once_batch(padded_flag,True)
     # if len_times[padded_flag] not exists in len_times:
     if padded_flag not in len_times:
         len_times[padded_flag] = chronotank.RunResult([], padded_flag,padded_flag,padded_flag)
     len_times[padded_flag].add_runs(result.runs)
-    if a:
-        break
     # plot.update(len_times[len_to_test])
     # print(f"Testing length {padded_flag}: {len_times[padded_flag].avg:.4f} seconds")
     if i % 100 == 0:
